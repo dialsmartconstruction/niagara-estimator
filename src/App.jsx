@@ -306,6 +306,10 @@ const QUESTIONS = {
     { id: "ceilingWork", label: "Ceiling — paint only, replace the drywall, tile it, or skip?", type: "select", options: ["Paint only", "Replace drywall", "Tile", "No ceiling work"] },
     { id: "accessories", label: "New towel bars, robe hooks, TP holder, and a mirror?", type: "select", options: ["Yes", "No"] },
     { id: "heatedFloor", label: "Interested in heated floor?", type: "select", options: ["Yes", "No"] },
+    { id: "showerNiche", label: "Adding a shower niche (recessed shelf)?", type: "select", options: ["Yes", "No"] },
+    { id: "nicheType", label: "Niche finish — tile with glass shelf, or stone (1 shelf)?", type: "select", options: ["Tile with glass shelf", "Stone (1 shelf)"], visibleIf: (a) => a.showerNiche === "Yes" },
+    { id: "curblessShower", label: "Curbless shower entry (lowering the floor)?", type: "select", options: ["Yes", "No"] },
+    { id: "showerBench", label: "Adding a floating shower bench (large format tile/slab)?", type: "select", options: ["Yes", "No"] },
     { id: "doorWindowTrimReplace", label: "Also replacing door and window trim (not just baseboard)?", type: "select", options: ["Yes", "No — baseboard only"] },
   ],
   basement: [
@@ -358,7 +362,14 @@ const QUESTIONS = {
       visibleIf: (a) => a.fireRatedWallNeeded === "Yes",
     },
     { id: "waterSigns", label: "Any signs of water — dampness, efflorescence, past flooding?", type: "select", options: ["Yes", "No"] },
-    { id: "flooring", label: "Flooring choice for a below-grade space?", type: "select", options: ["Vinyl (LVP)", "Laminate", "Tile", "Epoxy"] },
+    { id: "flooring", label: "Flooring choice for a below-grade space?", type: "select", options: ["Vinyl (LVP)", "Laminate", "Tile", "Epoxy", "Engineered floating click", "Gym flooring"] },
+    {
+      id: "vinylMethod",
+      label: "Installation method?",
+      type: "select",
+      options: ["Standard install (labour only)", "Glue down"],
+      visibleIf: (a) => a.flooring === "Vinyl (LVP)" || a.flooring === "Laminate",
+    },
     { id: "doorCount", label: "How many interior doors?", type: "number", unit: "doors", min: 0, max: 10, step: 1, default: 3 },
     { id: "slidingClosetDoors", label: "How many sliding closet doors?", type: "number", unit: "doors", min: 0, max: 6, step: 1, default: 0 },
     { id: "foundationCracks", label: "How many foundation cracks need repair?", type: "number", unit: "cracks", min: 0, max: 10, step: 1, default: 0 },
@@ -631,11 +642,12 @@ const RATE_META = {
     { key: "cleanupDisposalFlat", label: "Cleanup disposal (no demo, just haul-away after us)", unit: "$ flat", value: 120 },
     { key: "potLight", label: "Pot light", unit: "$/each", value: 60 },
     { key: "electricalPoint", label: "Outlet/switch", unit: "$/each", value: 50 },
-    { key: "tileStandardPerSqft", label: "Tile — standard", unit: "$/sq ft", value: 10 },
+    { key: "tileStandardPerSqft", label: "Tile — standard (wall)", unit: "$/sq ft", value: 10 },
+    { key: "floorTileStandardPerSqft", label: "Tile — standard (floor)", unit: "$/sq ft", value: 8 },
     { key: "tileMosaicPerSqft", label: "Tile — mosaic", unit: "$/sq ft", value: 15 },
     { key: "tileRemovalPerSqft", label: "Old tile removal — floor", unit: "$/sq ft", value: 3 },
     { key: "wallTileRemovalPerSqft", label: "Old tile removal — wall (labour $1.50 + disposal $0.50)", unit: "$/sq ft", value: 2 },
-    { key: "waterproofingPerSqft", label: "Waterproofing membrane", unit: "$/sq ft", value: 1.5 },
+    { key: "waterproofingPerSqft", label: "Waterproofing membrane", unit: "$/sq ft", value: 3.25 },
     { key: "drywallWallPerSqft", label: "Moisture-resistant drywall + taping, ready for paint", unit: "$/sq ft", value: 4 },
     { key: "extraDrywallPerSheetFlat", label: "Extra drywall, rest of bathroom (per sheet, minimum charge)", unit: "$/sheet", value: 100 },
     { key: "skimCoatPerSqft", label: "Skim coat (surface refresh)", unit: "$/sq ft", value: 1.35 },
@@ -654,6 +666,55 @@ const RATE_META = {
     { key: "showerTrimKitSupplyFlat", label: "Shower trim kit — Supply", unit: "$ flat", value: 250 },
     { key: "concreteShowerPan", label: "Custom shower pan + drain", unit: "$ flat", value: 325 },
     { key: "drywallPatch", label: "Drywall patch/repair", unit: "$/patch", value: 50 },
+    { key: "fractureResistantMembranePerSqft", label: "Fracture-resistant membrane", unit: "$/sq ft", value: 3.91 },
+    { key: "underlaymentHeatedFloorPerSqft", label: "Heat floor underlay installation", unit: "$/sq ft", value: 2.87 },
+    { key: "floorTileLargeSmallPerSqft", label: "Floor tile, large format (2–9 sq ft/tile)", unit: "$/sq ft", value: 6.74 },
+    { key: "floorTileLargeXLPerSqft", label: "Floor tile, large format (9–20 sq ft/tile)", unit: "$/sq ft", value: 7.67 },
+    { key: "wallTileLargeSmallPerSqft", label: "Wall tile, large format (2–9 sq ft/tile)", unit: "$/sq ft", value: 7.67 },
+    { key: "wallTileLargeXLPerSqft", label: "Wall tile, large format (9–20 sq ft/tile)", unit: "$/sq ft", value: 8.6 },
+    { key: "subwayTilePerSqft", label: "Subway tile or similar", unit: "$/sq ft", value: 11.11 },
+    { key: "porcelainSlabNoLiabilityPerSqft", label: "Porcelain slabs (no liability for damaged tile)", unit: "$/sq ft", value: 20.6 },
+    { key: "porcelainSlabLiablePerSqft", label: "Porcelain slabs (we cover cracked/damaged tile replacement)", unit: "$/sq ft", value: 24.6 },
+    { key: "ceilingTilePerSqft", label: "Ceiling tile", unit: "$/sq ft", value: 13.9 },
+    { key: "showerFloorMosaicPerSqft", label: "Shower floor mosaic", unit: "$/sq ft", value: 12.04 },
+    { key: "showerFloorEnvelopeCutPerSqft", label: "Shower floor envelope cut", unit: "$/sq ft", value: 26.97 },
+    { key: "tiledBaseboardsPerSqft", label: "Tiled baseboards", unit: "$/sq ft", value: 7.67 },
+    { key: "mosaicInlayEach", label: "Mosaic inlay", unit: "$/each", value: 302.25 },
+    { key: "stoneSeatInstallEach", label: "Stone seat installation", unit: "$/each", value: 65.1 },
+    { key: "sillInstallEach", label: "Sill installation", unit: "$/each", value: 41.85 },
+    { key: "premadeNicheGlassShelfEach", label: "Pre-made niche 16×24, waterproofed, tile with glass shelf", unit: "$/each", value: 265.05 },
+    { key: "premadeNicheStoneEach", label: "Pre-made niche, waterproofed, stone (1 shelf), tiled back", unit: "$/each", value: 162.75 },
+    { key: "supplyNiche16x16Each", label: "Supply pre-made niche, 16×16", unit: "$/each", value: 153.45 },
+    { key: "supplyNiche16x24Each", label: "Supply pre-made niche, 16×24", unit: "$/each", value: 172.05 },
+    { key: "supplyNiche16x36Each", label: "Supply pre-made niche, 16×36", unit: "$/each", value: 190.65 },
+    { key: "concreteSlopeEach", label: "Concrete slope (materials included)", unit: "$/each", value: 302.25 },
+    { key: "standardDrainEach", label: "Standard drain (supply and install)", unit: "$/each", value: 251.1 },
+    { key: "tiledDrainEach", label: "Tiled drain (supply and install)", unit: "$/each", value: 353.4 },
+    { key: "schlutterDrainSurchargeFlat", label: "Schlutter linear drain — surcharge over standard", unit: "$ flat", value: 116.25 },
+    { key: "waterproofingFullMembranePerSqft", label: "Waterproofing, full membrane", unit: "$/sq ft", value: 4.51 },
+    { key: "waterproofingPaintPerSqft", label: "Waterproofing paint", unit: "$/sq ft", value: 2.8 },
+    { key: "waterproofingCornersSeamsFlat", label: "Waterproofing corners, seams, shower base", unit: "$/shower", value: 302.25 },
+    { key: "heatedWireInstallEach", label: "Heat floor — wire installation (wire supplied by customer)", unit: "$/each", value: 119 },
+    { key: "heatedFloorBookingInspectionFlat", label: "Heated floor booking inspection", unit: "$ flat", value: 139.5 },
+    { key: "flushMountTileAirVentEach", label: "Flush mount tile air-vent — Installation (vent not included)", unit: "$/each", value: 55.8 },
+    { key: "ariaVentDropInEach", label: "Aria vent, drop-in with insert — Installation (vent not included)", unit: "$/each", value: 16.74 },
+    { key: "ariaVentFlushMountEach", label: "Aria vent, flush mount — Installation (vent not included)", unit: "$/each", value: 37.2 },
+    { key: "floorLevelingPerBag", label: "Floor leveling (install and supply)", unit: "$/bag", value: 69.75 },
+    { key: "curblessShowerConversionFlat", label: "Curbless shower conversion (lowering floor)", unit: "$/each", value: 953.25 },
+    { key: "foamCurbInstallPerLinFt", label: "Foam curb installation (supply and install)", unit: "$/linear ft", value: 25.11 },
+    { key: "glassStoneCornerShelfEach", label: "Glass/stone corner shelf installation, incl. shelf", unit: "$/each", value: 60.45 },
+    { key: "siliconeApplicationFlat", label: "Silicone application", unit: "$/job", value: 218.55 },
+    { key: "miteredTileCornerPerLinFt", label: "Mitered tile corner, incl. colour-matched epoxy", unit: "$/linear ft", value: 27.9 },
+    { key: "floatingBenchBracketsEach", label: "Floating shower bench brackets, incl. installation", unit: "$/each", value: 162.75 },
+    { key: "floatingBenchBaseFlat", label: "Floating shower bench (large format tile/slab), base", unit: "$ flat", value: 441.75 },
+    { key: "floatingBenchPerLinFt", label: "Floating shower bench, additional per linear ft", unit: "$/linear ft", value: 79.05 },
+    { key: "poolWaterproofingPerSqft", label: "Swimming pool waterproofing/wall prep", unit: "$/sq ft", value: 9.11 },
+    { key: "poolTileInstallPerSqft", label: "Swimming pool tile installation", unit: "$/sq ft", value: 11.11 },
+    { key: "bullnoseTileEdgePerLinFt", label: "Bull-nose for tile edge", unit: "$/linear ft", value: 15.81 },
+    { key: "windowJambTileEach", label: "Window jamb, tiled", unit: "$/each", value: 27.5 },
+    { key: "premadeNicheInstallOnlyEach", label: "Niche — installation only (niche supplied by client)", unit: "$/each", value: 80 },
+    { key: "tileEdgeMaterialEach", label: "Tile edge trim (material)", unit: "$/each", value: 15 },
+    { key: "heatedFloorMortarPerBag", label: "Heating floor mortar", unit: "$/bag", value: 39 },
     { key: "accessorySet", label: "Towel bars/hooks/TP holder & mirror install", unit: "$ flat", value: 70 },
     { key: "exhaustFan", label: "Exhaust fan replacement (existing duct)", unit: "$ flat", value: 230 },
     { key: "exhaustFanNewInstall", label: "Exhaust fan, new install (no existing duct, fan unit included)", unit: "$ flat", value: 320 },
@@ -753,6 +814,16 @@ const RATE_META = {
     { key: "concreteAdhesiveRemovalPerSqft", label: "Old adhesive/glue removal from concrete", unit: "$/sq ft", value: 2 },
     { key: "selfLevelingCompoundPerSqft", label: "Self-leveling compound (prep for new flooring)", unit: "$/sq ft", value: 3.5 },
     { key: "floorLaminatePerSqft", label: "Floor — vinyl/laminate install (labour only)", unit: "$/sq ft", value: 2 },
+    { key: "hardwoodGlueTogetherPerSqft", label: "Hardwood — glue together", unit: "$/sq ft", value: 2.74 },
+    { key: "hardwoodGlueNailPerSqft", label: "Hardwood — glue and nail", unit: "$/sq ft", value: 3.21 },
+    { key: "hardwoodGlueDownPerSqft", label: "Hardwood — glue down", unit: "$/sq ft", value: 5.12 },
+    { key: "hardwoodNailDownPerSqft", label: "Hardwood — nail down", unit: "$/sq ft", value: 2.74 },
+    { key: "laminateVinylPlankPerSqft", label: "Laminate/vinyl plank flooring", unit: "$/sq ft", value: 2.14 },
+    { key: "vinylPlankGlueDownPerSqft", label: "Vinyl plank (glue down)", unit: "$/sq ft", value: 3.07 },
+    { key: "vinylBaseboardPerLinFt", label: "Vinyl baseboards", unit: "$/linear ft", value: 2.28 },
+    { key: "engineeredFloatingClickPerSqft", label: "Engineered floating click flooring", unit: "$/sq ft", value: 2.19 },
+    { key: "hardwoodAirVentEach", label: "Flush mount hardwood air-vent — Installation", unit: "$/each", value: 32.55 },
+    { key: "gymFlooringPerSqft", label: "Gym flooring", unit: "$/sq ft", value: 3.67 },
   ],
   fullhome: [
     { key: "perSqft", label: "Full home renovation", unit: "$/sq ft", value: 108 },
@@ -1006,6 +1077,7 @@ function computeBathroom(a, rates) {
   const isFullReno = a.scope === "Full renovation";
   const hasShower = a.tubShower === "Shower" || a.tubShower === "Both";
   const tileRate = a.tileType === "Mosaic tile" ? BATH.tileMosaicPerSqft : BATH.tileStandardPerSqft;
+  const floorTileRate = a.tileType === "Mosaic tile" ? BATH.tileMosaicPerSqft : BATH.floorTileStandardPerSqft;
 
   const items = [];
   const flags = ["Tile, toilet, vanity top/sink, and glass are priced separately — this total covers labour, consumables, and disposal."];
@@ -1051,8 +1123,11 @@ function computeBathroom(a, rates) {
       const showerStallW = 6, showerStallD = 3; // typical alcove shower ~6x3 ft, matches the floor footprint
       const showerWallPerimeter = showerStallW + 2 * showerStallD; // 3 tiled walls: back + two sides = 12 linear ft
       wallTileArea = a.tileCoverage === "More of the bathroom (full room perimeter, floor to ceiling)" ? wallArea : showerWallPerimeter * 8;
-      if (BATH.waterproofingPerSqft != null) items.push({ cat: "Tile work", item: "Waterproofing membrane — Labour & Supply", cost: wallTileArea * BATH.waterproofingPerSqft, note: "Goes on before tile, behind the shower walls. Sheet or liquid membrane — whichever suits the job, same price either way." });
-      if (tileRate != null) items.push({ cat: "Tile work", item: `Wall tile (${a.tileType || "Standard tile"}) — Installation`, cost: wallTileArea * tileRate, note: "Install labour with thinset and grout included — tile itself priced separately.", buys: { name: "Wall/shower tile", low: Math.round(wallTileArea * 3), high: Math.round(wallTileArea * 5) } });
+      if (BATH.waterproofingPerSqft != null) {
+        const waterproofingAreaSqft = showerFootprintSqft + wallTileArea; // matches the actual shower floor + wall tile coverage
+        items.push({ cat: "Tile work", item: "Waterproofing membrane — Labour & Supply", cost: waterproofingAreaSqft * BATH.waterproofingPerSqft, note: `Matches the shower floor + wall tile area (${waterproofingAreaSqft.toFixed(0)} sq ft). Goes on before tile, sheet or liquid membrane, same price either way.` });
+      }
+      if (tileRate != null) items.push({ cat: "Tile work", item: `Wall tile (${a.tileType || "Standard tile"}) — Installation`, cost: wallTileArea * tileRate, note: "Install labour with thinset and grout included — tile itself priced separately.", buys: { name: "Wall/shower tile", low: Math.round(wallTileArea * 3), high: Math.round(wallTileArea * 5) }, materialQty: { type: "Tile — wall", unit: "sq ft", qty: wallTileArea } });
     }
     if (BATH.showerValveInstall != null) items.push({ cat: "Plumbing", item: "Shower valve/trim kit — Installation", cost: BATH.showerValveInstall, note: "Rough-in valve set before tile, trim kit installed after — one combined labour job." });
     if (BATH.showerTrimKitSupplyFlat != null) items.push({ cat: "Plumbing", item: "Shower trim kit — Supply", cost: BATH.showerTrimKitSupplyFlat, note: "We supply the trim kit — handle, head, and cover plate." });
@@ -1070,7 +1145,7 @@ function computeBathroom(a, rates) {
     if (a.floorMaterial === "Vinyl (LVP)" && BATH.floorVinylPerSqft != null) {
       items.push({ cat: "Flooring", item: "Floor — vinyl (LVP) — Installation", cost: mainFloorSqft * BATH.floorVinylPerSqft, note: "Labour only — vinyl material priced separately. Excludes the shower footprint, priced separately above.", buys: { name: "Vinyl (LVP) flooring material", low: Math.round(mainFloorSqft * 3), high: Math.round(mainFloorSqft * 4) } });
     } else if (tileRate != null) {
-      items.push({ cat: "Flooring", item: `Floor tile (${a.tileType || "Standard tile"}) — Installation`, cost: mainFloorSqft * tileRate, note: "Install with underlayment, thinset, and grout included — tile itself priced separately. Excludes the shower footprint, priced separately above.", buys: { name: "Floor tile", low: Math.round(mainFloorSqft * 3), high: Math.round(mainFloorSqft * 4) } });
+      items.push({ cat: "Flooring", item: `Floor tile (${a.tileType || "Standard tile"}) — Installation`, cost: mainFloorSqft * floorTileRate, note: "Install with underlayment, thinset, and grout included — tile itself priced separately. Excludes the shower footprint, priced separately above.", buys: { name: "Floor tile", low: Math.round(mainFloorSqft * 3), high: Math.round(mainFloorSqft * 4) }, materialQty: { type: "Tile — floor", unit: "sq ft", qty: mainFloorSqft } });
     }
   }
 
@@ -1146,6 +1221,30 @@ function computeBathroom(a, rates) {
 
   if (a.heatedFloor === "Yes" && BATH.heatedFloorPerSqft != null) {
     items.push({ cat: "Optional add-ons", item: "Heated floor — Labour & Supply", cost: sqft * BATH.heatedFloorPerSqft, note: "Shown separately — an upgrade, not a default inclusion." });
+    if (BATH.underlaymentHeatedFloorPerSqft != null) {
+      items.push({ cat: "Optional add-ons", item: "Underlayment for heated floors", cost: sqft * BATH.underlaymentHeatedFloorPerSqft, note: "Goes under the heated floor system." });
+    }
+    if (BATH.heatedWireInstallEach != null) {
+      items.push({ cat: "Optional add-ons", item: "Heated wire installation — Installation", cost: BATH.heatedWireInstallEach, note: "Wire supplied by customer — price of the wire itself depends on square footage, priced separately." });
+    }
+    if (BATH.heatedFloorBookingInspectionFlat != null) {
+      items.push({ cat: "Optional add-ons", item: "Heated floor booking inspection", cost: BATH.heatedFloorBookingInspectionFlat, note: "Required inspection booking for the heated floor install." });
+    }
+  }
+
+  if (a.showerNiche === "Yes") {
+    const nicheRate = a.nicheType === "Stone (1 shelf)" ? BATH.premadeNicheStoneEach : BATH.premadeNicheGlassShelfEach;
+    if (nicheRate != null) {
+      items.push({ cat: "Tile work", item: `Shower niche, waterproofed (${a.nicheType || "Tile with glass shelf"}) — Installation`, cost: nicheRate, note: "Pre-made niche box, waterproofed and finished in place." });
+    }
+  }
+
+  if (a.curblessShower === "Yes" && BATH.curblessShowerConversionFlat != null) {
+    items.push({ cat: "Plumbing", item: "Curbless shower conversion — Labour & Supply", cost: BATH.curblessShowerConversionFlat, note: "Lowering the floor to accommodate a curbless shower entry." });
+  }
+
+  if (a.showerBench === "Yes" && BATH.floatingBenchBaseFlat != null) {
+    items.push({ cat: "Tile work", item: "Floating shower bench (large format tile/slab) — Installation", cost: BATH.floatingBenchBaseFlat, note: "Base price — additional length priced per linear ft if needed, ask in Select Jobs Yourself." });
   }
 
   items.push(...customItems("bathroom", list));
@@ -1281,7 +1380,7 @@ function computeBasement(a, rates) {
 
   const doorCount = a.doorCount ?? 0;
   if (doorCount > 0 && r.doorInstallEach != null) {
-    items.push({ cat: "Doors & windows", item: `Interior doors (${doorCount}) — Labour & Supply`, cost: doorCount * r.doorInstallEach, note: "Turnkey, materials included." });
+    items.push({ cat: "Doors & windows", item: `Interior doors (${doorCount}) — Labour & Supply`, cost: doorCount * r.doorInstallEach, note: "Turnkey, materials included.", materialQty: { type: "Door trim pieces", unit: "pcs", qty: doorCount * 5 } });
   }
   if (doorCount > 0 && r.doorTrimPaintEach != null) {
     items.push({ cat: "Painting", item: `Door trim paint (${doorCount}) — Labour & Supply`, cost: doorCount * r.doorTrimPaintEach, note: "Paint and labour." });
@@ -1292,7 +1391,7 @@ function computeBasement(a, rates) {
   }
 
   if (r.baseboardPerLinFt != null) {
-    items.push({ cat: "Trim & finish carpentry", item: "Baseboard", cost: perimeter * r.baseboardPerLinFt, note: "Materials included." });
+    items.push({ cat: "Trim & finish carpentry", item: "Baseboard", cost: perimeter * r.baseboardPerLinFt, note: "Materials included.", materialQty: { type: "Baseboard", unit: "linear ft", qty: perimeter } });
   }
   if (r.paintPerSqft != null) {
     items.push({ cat: "Painting", item: "Walls + ceiling paint — Labour & Supply", cost: (wallArea + sqft) * r.paintPerSqft, note: "Two coats, paint included." });
@@ -1319,6 +1418,7 @@ function computeBasement(a, rates) {
       cost: sqft * floorRate,
       note: isTile ? "Concrete slab — no underlayment needed. Tile itself priced separately." : isEpoxy ? "Basic epoxy coating — grind, crack repair, moisture test, base coat, flake, topcoat. For premium finishes or moisture primer, use the Epoxy Floor button for a detailed quote." : "Labour only — material priced separately.",
       buys: isTile ? { name: "Floor tile", low: Math.round(sqft * 3), high: Math.round(sqft * 10) } : isEpoxy ? undefined : { name: `${a.flooring || "Vinyl (LVP)"} flooring material`, low: Math.round(sqft * (a.flooring === "Laminate" ? 2.5 : 3)), high: Math.round(sqft * (a.flooring === "Laminate" ? 3.5 : 4)) },
+      materialQty: isTile ? { type: "Tile — floor", unit: "sq ft", qty: sqft } : isEpoxy ? undefined : { type: a.flooring === "Laminate" ? "Laminate flooring" : "Vinyl flooring", unit: "sq ft", qty: sqft },
     });
   }
 
@@ -2377,7 +2477,18 @@ export default function NiagaraEstimatorSite() {
       }
     });
     const sheetsNeeded = Object.entries(sheetsMap).map(([type, count]) => ({ type, count }));
-    return { items: adjusted, flags, muni, chartData, subtotal, hst, total, days, phases, materialsToBuy, materialsLow, materialsHigh, materialsLowWithHst, materialsHighWithHst, sheetsNeeded };
+    const materialQtyMap = {};
+    adjusted.forEach((it) => {
+      if (it.materialQty) {
+        const key = `${it.materialQty.type}|${it.materialQty.unit}`;
+        materialQtyMap[key] = (materialQtyMap[key] || 0) + it.materialQty.qty;
+      }
+    });
+    const materialsQtyList = Object.entries(materialQtyMap).map(([key, qty]) => {
+      const [type, unit] = key.split("|");
+      return { type, unit, qty: Math.ceil(qty * 100) / 100 };
+    });
+    return { items: adjusted, flags, muni, chartData, subtotal, hst, total, days, phases, materialsToBuy, materialsLow, materialsHigh, materialsLowWithHst, materialsHighWithHst, sheetsNeeded, materialsQtyList };
   }, [phase, roomType, municipality, answers, rates, extraItems, removedItemIdx, itemCostOverride]);
 
   function startFlow(type) {
@@ -4217,6 +4328,25 @@ export default function NiagaraEstimatorSite() {
                           <tr key={i} className="border-t" style={{ borderColor: "#E6F0FC" }}>
                             <td className="py-2.5 px-5" style={{ color: "#475569" }}>{s.type}</td>
                             <td className="py-2.5 px-5 text-right font-medium whitespace-nowrap">{s.count} sheets</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {result.materialsQtyList && result.materialsQtyList.length > 0 && (
+                  <div className="mt-4 bg-white rounded-xl border shadow-lg overflow-hidden" style={{ borderColor: "#DCEAFB" }}>
+                    <div className="p-5 pb-0">
+                      <p className="font-medium text-sm">Materials quantity list</p>
+                      <p className="text-xs mt-1" style={{ color: "#64748B" }}>Quick reference for ordering — so you're not hunting for numbers later.</p>
+                    </div>
+                    <table className="w-full text-sm mt-3">
+                      <tbody>
+                        {result.materialsQtyList.map((m, i) => (
+                          <tr key={i} className="border-t" style={{ borderColor: "#E6F0FC" }}>
+                            <td className="py-2.5 px-5" style={{ color: "#475569" }}>{m.type}</td>
+                            <td className="py-2.5 px-5 text-right font-medium whitespace-nowrap">{m.qty} {m.unit}</td>
                           </tr>
                         ))}
                       </tbody>
