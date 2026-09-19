@@ -40,7 +40,7 @@ import {
   ChefHat, Bath, Layers, Home, Hammer, Paintbrush,
   ChevronRight, ChevronLeft, AlertTriangle, Info, Sparkles, MapPin,
   MessageCircle, Send, Loader2, Keyboard, Lock, Download, CalendarDays, CheckCircle2,
-  Search, Phone, Briefcase, MessageSquare, RefreshCw, Mic, Volume2, VolumeX, Settings, Save, RotateCcw, Trash2, Plus, Wrench, X, ShoppingCart, Fence, Sofa, Grid3x3, PanelsTopLeft, Droplets,
+  Search, Phone, Briefcase, MessageSquare, RefreshCw, Mic, Volume2, VolumeX, Settings, Save, RotateCcw, Trash2, Plus, Wrench, X, ShoppingCart, Fence, Sofa, Grid3x3, PanelsTopLeft, Droplets, ListChecks,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
@@ -193,16 +193,19 @@ function estimateTimeLabel(roomTypeId) {
 }
 
 const ROOM_TYPES = [
-  { id: "bathroom", label: "Bathroom", icon: Bath, blurb: "Full gut or surface refresh", accent: ["#0EA5E9", "#0369A1"] },
-  { id: "flood", label: "Flood Restoration", icon: Droplets, blurb: "Restore the space after demo & cleanup", accent: ["#2563EB", "#1E3A8A"] },
-  { id: "basement", label: "Basement", icon: Layers, blurb: "Finishing an unfinished space", accent: ["#64748B", "#334155"] },
-  { id: "epoxyfloor", label: "Epoxy Floor", icon: Layers, blurb: "Basement or garage — basic to decorative", accent: ["#0F766E", "#134E4A"] },
-  { id: "kitchen", label: "Kitchen", icon: ChefHat, blurb: "Cabinets, counters, layout changes", accent: ["#F97316", "#C2410C"] },
+  { id: "bathroom", label: "Bathroom Renovation", icon: Bath, blurb: "Full gut or surface refresh", accent: ["#0EA5E9", "#0369A1"] },
+  { id: "flood", label: "Flood Restoration", icon: Droplets, blurb: "Water damage, demo & rebuild", accent: ["#2563EB", "#1E3A8A"] },
+  { id: "basement", label: "Basement Renovation", icon: Layers, blurb: "Finishing an unfinished space", accent: ["#64748B", "#334155"] },
+  { id: "kitchen", label: "Kitchen Renovation", icon: ChefHat, blurb: "Cabinets, counters, layout changes", accent: ["#F97316", "#C2410C"] },
   { id: "paint", label: "Paint refresh", icon: Paintbrush, blurb: "Walls and ceilings only", accent: ["#A855F7", "#6B21A8"] },
   { id: "deckfence", label: "Deck / Fence", icon: Fence, blurb: "Fence, footings, decking, and railing", accent: ["#65A30D", "#3F6212"] },
   { id: "glass", label: "Glass", icon: PanelsTopLeft, blurb: "Shower glass, railings, custom glass work", accent: ["#06B6D4", "#0E7490"] },
-  { id: "interlocking", label: "Interlocking", icon: Grid3x3, blurb: "Paver patios and walkways", accent: ["#57534E", "#292524"] },
+  { id: "interlocking", label: "Interlocking Concrete", icon: Grid3x3, blurb: "Paver patios, walkways, driveways, steps", accent: ["#57534E", "#292524"] },
 ];
+
+/* Epoxy Floor — button removed from the grid per request, code kept intact.
+   Still reachable via Quick Job (Select Jobs Yourself) search, same pattern as Roof/Exterior. */
+const EPOXY_FLOOR_TYPE = { id: "epoxyfloor", label: "Epoxy Floor", icon: Layers, blurb: "Basement or garage — basic to decorative", accent: ["#0F766E", "#134E4A"] };
 
 /* Per-room question sets — drawn straight from the Question Flow tab */
 const QUESTIONS = {
@@ -304,10 +307,10 @@ const QUESTIONS = {
       options: ["Yes", "No"],
       visibleIf: (a) => a.tubShower === "Shower" || a.tubShower === "Both",
     },
-    { id: "showerNiche", label: "Adding a shower niche (recessed shelf)?", type: "select", options: ["Yes", "No"], visibleIf: (a) => a.showerBaseType !== "Prefab acrylic stall" },
-    { id: "nicheType", label: "Ready-made niche, or custom-built?", type: "select", options: ["Ready-made", "Custom"], visibleIf: (a) => a.showerNiche === "Yes" && a.showerBaseType !== "Prefab acrylic stall" },
-    { id: "curblessShower", label: "Curbless shower entry (lowering the floor)?", type: "select", options: ["Yes", "No"], visibleIf: (a) => a.showerBaseType !== "Prefab acrylic stall" },
-    { id: "showerBench", label: "Adding a floating shower bench (large format tile/slab)?", type: "select", options: ["Yes", "No"], visibleIf: (a) => a.showerBaseType !== "Prefab acrylic stall" },
+    { id: "showerNiche", label: "Adding a shower niche (recessed shelf)?", type: "select", options: ["Yes", "No"], visibleIf: (a) => (a.tubShower === "Shower" || a.tubShower === "Both") && a.showerBaseType !== "Prefab acrylic stall" },
+    { id: "nicheType", label: "Ready-made niche, or custom-built?", type: "select", options: ["Ready-made", "Custom"], visibleIf: (a) => a.showerNiche === "Yes" && (a.tubShower === "Shower" || a.tubShower === "Both") && a.showerBaseType !== "Prefab acrylic stall" },
+    { id: "curblessShower", label: "Curbless shower entry (lowering the floor)?", type: "select", options: ["Yes", "No"], visibleIf: (a) => (a.tubShower === "Shower" || a.tubShower === "Both") && a.showerBaseType !== "Prefab acrylic stall" },
+    { id: "showerBench", label: "Adding a floating shower bench (large format tile/slab)?", type: "select", options: ["Yes", "No"], visibleIf: (a) => (a.tubShower === "Shower" || a.tubShower === "Both") && a.showerBaseType !== "Prefab acrylic stall" },
     { id: "accessories", label: "New towel bars, robe hooks, TP holder, and a mirror?", type: "select", options: ["Yes", "No"] },
     { id: "heatedFloor", label: "Interested in heated floor?", type: "select", options: ["Yes", "No"] },
     { id: "doorWindowTrimReplace", label: "Also replacing door and window trim (not just baseboard)?", type: "select", options: ["Yes", "No — baseboard only"] },
@@ -378,8 +381,16 @@ const QUESTIONS = {
     { id: "slidingClosetDoors", label: "How many sliding closet doors?", type: "number", unit: "doors", min: 0, max: 6, step: 1, default: 0 },
     { id: "foundationCracks", label: "How many foundation cracks need repair?", type: "number", unit: "cracks", min: 0, max: 10, step: 1, default: 0 },
     { id: "legalBedroom", label: "Do you want a legal bedroom down there? (needs an egress window)", type: "select", options: ["Yes", "No"] },
+    { id: "egressWindowType", label: "Egress window — extension down only, or new opening/side extension (needs a new lintel)?", type: "select", options: ["Extension down only", "New opening or side extension (lintel)"], visibleIf: (a) => a.legalBedroom === "Yes" },
     { id: "secondaryUnit", label: "Turning this into a separate legal unit (needs water/utility separation)?", type: "select", options: ["Yes", "No"] },
     { id: "separateEntrance", label: "Need a separate entrance?", type: "select", options: ["Yes", "No"] },
+    {
+      id: "separateEntranceTier",
+      label: "Full permit-compliant legal entrance, or just cutting the opening + door (ground or underground level)?",
+      type: "select",
+      options: ["Full legal entrance (permits, railings, inspections)", "Ground level (near-grade, minimal excavation)", "Underground level (buried wall, excavation needed)"],
+      visibleIf: (a) => a.separateEntrance === "Yes",
+    },
     { id: "relocationNeeded", label: "Does anything need relocating (stairs, ductwork, panel)?", type: "select", options: ["Yes", "No"] },
   ],
   fullhome: [
@@ -713,6 +724,7 @@ const RATE_META = {
     { key: "waterproofingCornersSeamsFlat", label: "Waterproofing corners, seams, shower base", unit: "$/shower", value: 302.25 },
     { key: "heatedWireInstallEach", label: "Heat floor — wire installation (wire supplied by customer)", unit: "$/each", value: 119 },
     { key: "heatedFloorBookingInspectionFlat", label: "Heated floor booking inspection", unit: "$ flat", value: 139.5 },
+    { key: "heatedFloorThermostatFlat", label: "Thermostat, heated floor", unit: "$ flat", value: 220 },
     { key: "flushMountTileAirVentEach", label: "Flush mount tile air-vent — Installation (vent not included)", unit: "$/each", value: 55.8 },
     { key: "ariaVentDropInEach", label: "Aria vent, drop-in with insert — Installation (vent not included)", unit: "$/each", value: 16.74 },
     { key: "ariaVentFlushMountEach", label: "Aria vent, flush mount — Installation (vent not included)", unit: "$/each", value: 37.2 },
@@ -810,8 +822,12 @@ const RATE_META = {
     { key: "breakerInstallEach", label: "New breaker (varies by type) — minimum", unit: "$/each", value: 50 },
     { key: "wireRunPerLinFt", label: "Run new wire, longer runs (market-rate estimate, confirm)", unit: "$/linear ft", value: 4 },
     { key: "furnaceFireShutdownFlat", label: "Furnace fire shutdown valve/interlock", unit: "$ flat", value: 660 },
-    { key: "egressWindowFlat", label: "Egress window, turnkey (starting price)", unit: "$ flat", value: 1550 },
-    { key: "separateEntranceFlat", label: "Separate entrance, permit-compliant turnkey (door + railings + inspections)", unit: "$ flat", value: 14000 },
+    { key: "egressWindowFlat", label: "Egress window — extension down only, no lintel change (starting price)", unit: "$ flat", value: 1550 },
+    { key: "egressWindowLintelFlat", label: "Egress window — new opening or side extension, lintel replacement needed (starting price)", unit: "$ flat", value: 1750 },
+    { key: "separateEntranceGroundFlat", label: "Separate entrance, ground level (near-grade wall, minimal excavation, starting price)", unit: "$ flat", value: 2800 },
+    { key: "separateEntranceUndergroundFlat", label: "Separate entrance, underground level (buried wall, excavation required, starting price)", unit: "$ flat", value: 6500 },
+    { key: "undergroundEntrancePermitFlat", label: "Permit, separate entrance (ground/underground/full legal)", unit: "$ flat", value: 900 },
+    { key: "separateEntranceFlat", label: "Separate entrance, permit-compliant turnkey (door + railings + inspections, materials, insulation) — starting price", unit: "$ flat", value: 14200 },
     { key: "doorInstallEach", label: "Interior door, turnkey (frame + casing + lockset, materials incl.)", unit: "$/each", value: 390 },
     { key: "doorFrameLabourOnlyEach", label: "Door + frame install, labour only (client supplies the door)", unit: "$/each", value: 220 },
     { key: "doorSlabCutInEach", label: "Door slab replacement, cut in for hinges/lock", unit: "$/each", value: 140 },
@@ -900,8 +916,9 @@ const RATE_META = {
     { key: "irregularSurchargePct", label: "Irregular shape surcharge (extra cuts)", unit: "% surcharge", value: 18 },
     { key: "excavatorSurchargeFlat", label: "Excavator rental surcharge (placeholder — confirm)", unit: "$ flat", value: 380 },
     { key: "ownPaverDiscountPerSqft", label: "Discount if client supplies their own paver", unit: "$/sq ft", value: 5 },
-    { key: "concreteWalkwayPerSqft", label: "Poured concrete walkway (broom finish, incl. base prep)", unit: "$/sq ft", value: 12 },
-    { key: "concreteStepEach", label: "Poured concrete step", unit: "$/step", value: 300 },
+    { key: "concreteWalkwayPerSqft", label: "Poured concrete sidewalk/walkway (broom finish, incl. base prep)", unit: "$/sq ft", value: 9.6 },
+    { key: "concreteDrivewayPerSqft", label: "Poured concrete driveway (broom finish, incl. base prep)", unit: "$/sq ft", value: 9.6 },
+    { key: "concreteStepEach", label: "Poured concrete step", unit: "$/step", value: 280 },
     { key: "concreteStepTileEach", label: "Tile over a concrete step", unit: "$/step", value: 150 },
     { key: "oldConcreteRemovalPerSqft", label: "Old concrete/asphalt removal", unit: "$/sq ft", value: 4 },
     { key: "porcelainTileOutdoorPerSqft", label: "Outdoor porcelain tile (frost-rated, incl. install)", unit: "$/sq ft", value: 18 },
@@ -954,7 +971,7 @@ const RATE_META = {
     { key: "efCrackRepairPerLinFt", label: "Moderate crack repair (routing/sealing, before coating)", unit: "$/linear ft", value: 12 },
   ],
 };
-const ROOM_LABELS = { kitchen: "Kitchen", bathroom: "Bathroom", basement: "Basement", fullhome: "Full home", roof: "Roof / exterior", paint: "Paint refresh", deckfence: "Deck / Fence", interlocking: "Interlocking", glass: "Glass", flood: "Flood Restoration", epoxyfloor: "Epoxy Floor" };
+const ROOM_LABELS = { kitchen: "Kitchen Renovation", bathroom: "Bathroom Renovation", basement: "Basement Renovation", fullhome: "Full home", roof: "Roof / exterior", paint: "Paint refresh", deckfence: "Deck / Fence", interlocking: "Interlocking Concrete", glass: "Glass", flood: "Flood Restoration", epoxyfloor: "Epoxy Floor" };
 
 // Search helpers for Quick Job — plain substring matching misses common cases
 // like "frame" vs "framing" (they only share a 4-letter stem) or everyday
@@ -1262,11 +1279,15 @@ function computeBathroom(a, rates) {
     if (BATH.heatedFloorBookingInspectionFlat != null) {
       items.push({ cat: "Optional add-ons", item: "Heated floor booking inspection", cost: BATH.heatedFloorBookingInspectionFlat, note: "Required inspection booking for the heated floor install." });
     }
+    if (BATH.heatedFloorThermostatFlat != null) {
+      items.push({ cat: "Optional add-ons", item: "Thermostat — Supply", cost: BATH.heatedFloorThermostatFlat, note: "Required to control the heated floor." });
+      items.push({ cat: "Optional add-ons", item: "Thermostat — Installation", cost: BATH.heatedFloorThermostatFlat * 0.3, note: "Wiring in and mounting the thermostat, roughly 30% of unit cost." });
+    }
   }
 
   const hasAcrylicBase = a.showerBaseType === "Prefab acrylic stall";
 
-  if (a.showerNiche === "Yes" && !hasAcrylicBase) {
+  if (a.showerNiche === "Yes" && hasShower && !hasAcrylicBase) {
     const isCustomNiche = a.nicheType === "Custom";
     const nicheRate = isCustomNiche ? BATH.nicheCustomFlat : BATH.nicheReadyMadeFlat;
     if (nicheRate != null) {
@@ -1274,13 +1295,13 @@ function computeBathroom(a, rates) {
     }
   }
 
-  if (a.curblessShower === "Yes" && !hasAcrylicBase && BATH.curblessShowerConversionFlat != null) {
+  if (a.curblessShower === "Yes" && hasShower && !hasAcrylicBase && BATH.curblessShowerConversionFlat != null) {
     items.push({ cat: "Plumbing", item: "Curbless shower conversion — Labour & Supply", cost: BATH.curblessShowerConversionFlat, note: "Lowering the floor to accommodate a curbless shower entry." });
-  } else if (a.curblessShower === "No" && !hasAcrylicBase && BATH.showerJambFlat != null) {
+  } else if (a.curblessShower === "No" && hasShower && !hasAcrylicBase && BATH.showerJambFlat != null) {
     items.push({ cat: "Plumbing", item: "Shower jamb/threshold — Installation", cost: BATH.showerJambFlat, note: "Closes off the standard curb/threshold." });
   }
 
-  if (a.showerBench === "Yes" && !hasAcrylicBase && BATH.floatingBenchBaseFlat != null) {
+  if (a.showerBench === "Yes" && hasShower && !hasAcrylicBase && BATH.floatingBenchBaseFlat != null) {
     items.push({ cat: "Tile work", item: "Floating shower bench (large format tile/slab) — Installation", cost: BATH.floatingBenchBaseFlat, note: "Base price — additional length priced per linear ft if needed, ask in Select Jobs Yourself." });
   }
 
@@ -1463,14 +1484,38 @@ function computeBasement(a, rates) {
     });
   }
 
-  if (a.legalBedroom === "Yes" && r.egressWindowFlat != null) {
-    items.push({ cat: "Doors & windows", item: "Egress window — Labour & Supply", cost: r.egressWindowFlat, note: "Starting price — cutting the opening, window well, weeping tile, exterior trim, and the window itself. Can run higher depending on depth and soil conditions." });
+  if (a.legalBedroom === "Yes") {
+    const needsLintel = a.egressWindowType === "New opening or side extension (lintel)";
+    const egressRate = needsLintel ? r.egressWindowLintelFlat : r.egressWindowFlat;
+    if (egressRate != null) {
+      items.push({
+        cat: "Doors & windows",
+        item: "Egress window — Labour & Supply",
+        cost: egressRate,
+        note: needsLintel
+          ? "Starting price — digging, breaking concrete, new metal lintel, window well, weeping tile, debris removal, window, exterior trim. Can run higher depending on depth, soil, and lintel size."
+          : "Starting price — digging, breaking concrete, window well, weeping tile, debris removal, window, exterior trim. Extension down only — no lintel change needed. Can run higher depending on depth and soil conditions.",
+      });
+    }
   }
   if (a.secondaryUnit === "Yes" && r.unitSeparationFlat != null) {
     items.push({ cat: "Plumbing", item: "Utility separation for a secondary unit — Labour & Supply", cost: r.unitSeparationFlat, note: "Separate water supply/metering for a legal secondary unit." });
   }
-  if (a.separateEntrance === "Yes" && r.separateEntranceFlat != null) {
-    items.push({ cat: "Doors & windows", item: "Separate entrance — Labour & Supply", cost: r.separateEntranceFlat, note: "Permit-compliant, turnkey with door and railings — includes inspections. Only offered as a permitted job." });
+  if (a.separateEntrance === "Yes") {
+    const tier = a.separateEntranceTier;
+    if (tier === "Ground level (near-grade, minimal excavation)" && r.separateEntranceGroundFlat != null) {
+      items.push({ cat: "Doors & windows", item: "Separate entrance, ground level — Labour & Supply", cost: r.separateEntranceGroundFlat, note: "Starting price — cutting the opening, door, minimal excavation for a near-grade wall. Not a permitted legal entrance package." });
+    } else if (tier === "Underground level (buried wall, excavation needed)" && r.separateEntranceUndergroundFlat != null) {
+      items.push({ cat: "Doors & windows", item: "Separate entrance, underground level — Labour & Supply", cost: r.separateEntranceUndergroundFlat, note: "Starting price — cutting the opening, door, excavation for a buried wall. Can run higher depending on depth and soil conditions. Not the full permitted legal entrance package." });
+      if (r.undergroundEntrancePermitFlat != null) {
+        items.push({ cat: "Doors & windows", item: "Permit, underground level entrance", cost: r.undergroundEntrancePermitFlat, note: "Typically $800–$1,000 — required for underground-level entrance work." });
+      }
+    } else if (r.separateEntranceFlat != null) {
+      items.push({ cat: "Doors & windows", item: "Separate entrance — Labour & Supply", cost: r.separateEntranceFlat, note: "Starting price — turnkey with door, railings, materials, and insulation. Includes inspections; permit fee is separate." });
+      if (r.undergroundEntrancePermitFlat != null) {
+        items.push({ cat: "Doors & windows", item: "Permit, separate entrance", cost: r.undergroundEntrancePermitFlat, note: "Typically $800–$1,000 — not included in the entrance price above." });
+      }
+    }
   }
   if (a.relocationNeeded === "Yes") {
     flags.push("Relocating stairs, ductwork, or the panel needs a site visit to price properly.");
@@ -3092,7 +3137,7 @@ export default function NiagaraEstimatorSite() {
               </p>
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
               <button
                 onClick={() => setPhase("quickjob")}
                 className="relative text-left rounded-lg overflow-hidden border-2 transition-transform hover:scale-[1.02] w-full sm:w-1/3"
@@ -3109,9 +3154,26 @@ export default function NiagaraEstimatorSite() {
                   <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.85)" }}>Search and stack up any jobs — build your own price.</p>
                 </div>
               </button>
+              <button
+                onClick={() => setPhase("quickjob")}
+                className="relative text-left rounded-lg overflow-hidden border-2 transition-transform hover:scale-[1.02] w-full sm:w-1/3"
+                style={{ borderColor: "#DCEAFB", height: 132 }}
+                title="Mixed jobs across multiple rooms — grouped by room in the final price."
+              >
+                <div
+                  className="absolute inset-0"
+                  style={{ background: `linear-gradient(135deg, #0F172A 0%, #334155 100%)` }}
+                />
+                <ListChecks size={92} strokeWidth={1.25} className="absolute -right-3 -bottom-3 opacity-25" style={{ color: "#FFFFFF" }} />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,0.55) 100%)" }} />
+                <div className="relative h-full flex flex-col justify-end p-3">
+                  <p className="font-semibold text-white leading-tight text-lg">Custom Room Work</p>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.85)" }}>Mixed jobs across multiple rooms — organized for you.</p>
+                </div>
+              </button>
             </div>
 
-            <p className="text-sm font-semibold mt-6 mb-4" style={{ color: "#475569" }}>What are you renovating?</p>
+            <p className="text-sm font-semibold mt-10 mb-4" style={{ color: "#475569" }}>What are you renovating?</p>
             <div className="grid grid-cols-2 gap-3">
               {ROOM_TYPES.map((t, i) => {
                 const [c1, c2] = t.accent || [WINE, INK];
